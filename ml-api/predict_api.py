@@ -1,49 +1,52 @@
 from flask import Flask, request, jsonify
+import pandas as pd
 import joblib
-import numpy as np
 
 app = Flask(__name__)
 
-model = joblib.load("claimwatch_model.pkl")
-
-@app.route("/")
-def home():
-    return "ClaimWatchAI ML API Running"
+# Load model
+metadata = joblib.load("claimwatch_model.pkl")
+model = metadata["model"]
+features = metadata["features"]
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    try:
+        data = request.json
+        print("Received data:", data)
 
-    data = request.json
+        # Convert to dataframe
+        input_data = pd.DataFrame([{
+            "months_as_customer": data["monthsAsCustomer"],
+            "age": data["age"],
+            "policy_deductable": data["policyDeductable"],
+            "policy_annual_premium": data["policyAnnualPremium"],
+            "umbrella_limit": data["umbrellaLimit"],
+            "incident_severity": data["incidentSeverity"],
+            "number_of_vehicles_involved": data["numberOfVehiclesInvolved"],
+            "bodily_injuries": data["bodilyInjuries"],
+            "total_claim_amount": data["totalClaimAmount"]
+        }])
 
-    features = np.array([
-        data["months_as_customer"],
-        data["age"],
-        data["policy_deductable"],
-        data["policy_annual_premium"],
-        data["umbrella_limit"],
-        data["incident_severity"],
-        data["number_of_vehicles_involved"],
-        data["bodily_injuries"],
-        data["total_claim_amount"]
-    ]).reshape(1,-1)
+        prob = model.predict_proba(input_data)[0][1]
 
-    prediction = model.predict(features)[0]
+        if prob > 0.20:
+            result = "FRAUD"
+        else:
+            result = "LEGIT"
 
-    if prediction == 1:
-        result = "FRAUD"
-    else:
-        result = "LEGIT"
+        print("Fraud Probability:", prob)
+        print("Prediction:", result)
 
-    # 🔹 Print result in terminal
-    print("\n===== CLAIMWATCH AI PREDICTION =====")
-    print("Input Data:", data)
-    print("Prediction:", result)
-    print("====================================\n")
+        return jsonify({
+            "prediction": result,
+            "fraudProbability": float(prob)
+        })
 
-    return jsonify({
-        "prediction": result
-    })
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5001)

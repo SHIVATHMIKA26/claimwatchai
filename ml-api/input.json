@@ -1,11 +1,12 @@
+
 {
-  "months_as_customer": 250,
-  "age": 35,
-  "policy_deductable": 500,
-  "policy_annual_premium": 1200,
-  "umbrella_limit": 0,
-  "incident_severity": 1,
-  "number_of_vehicles_involved": 2,
-  "bodily_injuries": 0,
-  "total_claim_amount": 25000
+"monthsAsCustomer":120,
+"age":35,
+"policyDeductable":1000,
+"policyAnnualPremium":1500,
+"umbrellaLimit":0,
+"incidentSeverity":2,
+"numberOfVehiclesInvolved":1,
+"bodilyInjuries":0,
+"totalClaimAmount":50000
 }
