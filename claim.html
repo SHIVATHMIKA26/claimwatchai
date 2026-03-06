@@ -1,0 +1,2255 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>ClaimWatch AI — Insurance Fraud Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet"/>
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           DESIGN SYSTEM — ClaimWatch AI
+           Aesthetic: Precision-military × forensic terminal × amber alert
+           ══════════════════════════════════════════════════════════ */
+        :root {
+            --ink:        #07080d;
+            --ink2:       #0d0e16;
+            --ink3:       #131421;
+            --ink4:       #191b2a;
+            --wire:       rgba(255,255,255,0.06);
+            --wire2:      rgba(255,255,255,0.10);
+            --wire3:      rgba(255,255,255,0.16);
+            --text:       #c8cce0;
+            --text2:      #8890b0;
+            --text3:      #50567a;
+            --amber:      #f5a623;
+            --amber-d:    rgba(245,166,35,0.12);
+            --amber-g:    rgba(245,166,35,0.4);
+            --cyan:       #00d4ff;
+            --cyan-d:     rgba(0,212,255,0.10);
+            --cyan-g:     rgba(0,212,255,0.35);
+            --red:        #ff4757;
+            --red-d:      rgba(255,71,87,0.12);
+            --red-g:      rgba(255,71,87,0.35);
+            --green:      #2ed573;
+            --green-d:    rgba(46,213,115,0.10);
+            --green-g:    rgba(46,213,115,0.3);
+            --violet:     #a78bfa;
+            --r:          10px;
+            --r-sm:       6px;
+            --shadow:     0 4px 32px rgba(0,0,0,0.6);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { font-size: 14px; scroll-behavior: smooth; }
+
+        body {
+            background: var(--ink);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* Halftone grid texture */
+            background-image:
+                    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--ink); }
+        ::-webkit-scrollbar-thumb { background: var(--wire3); border-radius: 2px; }
+
+        /* ══════════════════════════════════════════════════════════
+           LAYOUT
+           ══════════════════════════════════════════════════════════ */
+        .shell { display: flex; min-height: 100vh; }
+
+        /* ══════════════════════════════════════════════════════════
+           SIDEBAR
+           ══════════════════════════════════════════════════════════ */
+        .sidebar {
+            width: 220px;
+            background: var(--ink2);
+            border-right: 1px solid var(--wire);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            z-index: 200;
+            overflow-y: auto;
+        }
+
+        .brand {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid var(--wire);
+            flex-shrink: 0;
+        }
+        .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
+        .brand-shield {
+            width: 34px; height: 34px;
+            background: var(--amber);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            box-shadow: 0 0 18px var(--amber-g);
+            animation: shieldPulse 4s ease-in-out infinite;
+        }
+        @keyframes shieldPulse {
+            0%,100% { box-shadow: 0 0 18px var(--amber-g); }
+            50% { box-shadow: 0 0 28px var(--amber-g), 0 0 50px rgba(245,166,35,0.15); }
+        }
+        .brand-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: 0.06em;
+            color: #fff;
+            line-height: 1;
+        }
+        .brand-tag {
+            font-size: 0.6rem;
+            color: var(--text3);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-left: 44px;
+        }
+
+        .nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+        .nav-group-label {
+            font-size: 0.58rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text3);
+            padding: 14px 20px 6px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 20px;
+            cursor: pointer;
+            transition: all 0.18s;
+            font-size: 0.75rem;
+            color: var(--text2);
+            border-left: 2px solid transparent;
+            user-select: none;
+            position: relative;
+        }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+        .nav-link.active {
+            color: var(--amber);
+            border-left-color: var(--amber);
+            background: var(--amber-d);
+        }
+        .nav-link .ni { font-size: 0.85rem; width: 16px; text-align: center; opacity: 0.8; }
+        .nav-link.active .ni { opacity: 1; }
+        .nbadge {
+            margin-left: auto;
+            font-size: 0.58rem;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 20px;
+            line-height: 1.5;
+        }
+        .nbadge.danger { background: var(--red); color: #fff; }
+        .nbadge.warn   { background: var(--amber); color: #000; }
+
+        .sidebar-foot {
+            border-top: 1px solid var(--wire);
+            padding: 14px 20px;
+            flex-shrink: 0;
+        }
+        .user-row { display: flex; align-items: center; gap: 9px; }
+        .u-avatar {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--amber), #e55a00);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700; color: #000;
+            flex-shrink: 0;
+        }
+        .u-name { font-size: 0.72rem; color: var(--text); font-weight: 500; }
+        .u-role { font-size: 0.6rem; color: var(--text3); }
+
+        /* ══════════════════════════════════════════════════════════
+           MAIN
+           ══════════════════════════════════════════════════════════ */
+        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── Topbar ── */
+        .topbar {
+            height: 54px;
+            display: flex; align-items: center;
+            padding: 0 28px;
+            border-bottom: 1px solid var(--wire);
+            background: rgba(7,8,13,0.9);
+            backdrop-filter: blur(16px);
+            position: sticky; top: 0;
+            z-index: 100;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+        .topbar-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #fff;
+            flex: 1;
+        }
+        .topbar-search {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--ink3);
+            border: 1px solid var(--wire2);
+            border-radius: var(--r-sm);
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            color: var(--text3);
+            width: 200px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .topbar-search:hover { border-color: var(--amber); color: var(--text); }
+        .pulse-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--green-d);
+            border: 1px solid rgba(46,213,115,0.2);
+            border-radius: 20px;
+            padding: 4px 11px;
+            font-size: 0.62rem;
+            color: var(--green);
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+        }
+        .pulse-dot {
+            width: 6px; height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: blink 1.8s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .icon-btn {
+            width: 34px; height: 34px;
+            background: var(--ink3);
+            border: 1px solid var(--wire2);
+            border-radius: var(--r-sm);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9rem;
+            transition: all 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover { border-color: var(--amber); }
+        .icon-btn .dot {
+            position: absolute; top: 5px; right: 5px;
+            width: 7px; height: 7px;
+            background: var(--red);
+            border-radius: 50%;
+            border: 1.5px solid var(--ink);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           PAGES
+           ══════════════════════════════════════════════════════════ */
+        .page { display: none; padding: 28px; animation: pageIn 0.28s ease; }
+        .page.active { display: block; }
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .page-hero { margin-bottom: 26px; }
+        .page-hero h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+        }
+        .page-hero h1 em {
+            font-style: normal;
+            color: var(--amber);
+        }
+        .page-hero p { font-size: 0.72rem; color: var(--text3); margin-top: 5px; }
+
+        /* ══════════════════════════════════════════════════════════
+           CARDS
+           ══════════════════════════════════════════════════════════ */
+        .card {
+            background: var(--ink2);
+            border: 1px solid var(--wire);
+            border-radius: var(--r);
+            overflow: hidden;
+        }
+        .card-head {
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid var(--wire);
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px;
+        }
+        .card-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .card-sub { font-size: 0.62rem; color: var(--text3); margin-top: 2px; }
+        .card-body { padding: 20px 22px; }
+
+        /* ══════════════════════════════════════════════════════════
+           KPI GRID
+           ══════════════════════════════════════════════════════════ */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .kpi {
+            background: var(--ink2);
+            border: 1px solid var(--wire);
+            border-radius: var(--r);
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: default;
+        }
+        .kpi:hover { transform: translateY(-2px); border-color: var(--wire3); }
+        .kpi::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: var(--kpi-color, var(--amber));
+            opacity: 0.7;
+        }
+        .kpi-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text3);
+            margin-bottom: 10px;
+        }
+        .kpi-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 7px;
+        }
+        .kpi-sub {
+            font-size: 0.65rem;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .kpi-sub.up { color: var(--green); }
+        .kpi-sub.down { color: var(--red); }
+        .kpi-sub.neutral { color: var(--text3); }
+        .kpi-icon {
+            position: absolute; right: 16px; top: 16px;
+            font-size: 1.5rem; opacity: 0.15;
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           RISK BADGES + STATUS CHIPS
+           ══════════════════════════════════════════════════════════ */
+        .risk {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 9px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .risk::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+        .risk.H { background: var(--red-d);   color: var(--red);   border: 1px solid rgba(255,71,87,.2); }
+        .risk.M { background: var(--amber-d); color: var(--amber); border: 1px solid rgba(245,166,35,.2); }
+        .risk.L { background: var(--green-d); color: var(--green); border: 1px solid rgba(46,213,115,.2); }
+
+        .chip {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+        .chip.investigating { background: rgba(167,139,250,.12); color: var(--violet); }
+        .chip.approved      { background: var(--green-d); color: var(--green); }
+        .chip.processing    { background: var(--cyan-d);  color: var(--cyan);  }
+        .chip.rejected      { background: var(--red-d);   color: var(--red);   }
+        .chip.draft         { background: rgba(255,255,255,.05); color: var(--text3); }
+
+        /* ══════════════════════════════════════════════════════════
+           TABLE
+           ══════════════════════════════════════════════════════════ */
+        .tbl-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        thead tr { background: var(--ink3); }
+        th {
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 0.58rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text3);
+            font-weight: 500;
+            border-bottom: 1px solid var(--wire);
+            white-space: nowrap;
+        }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--wire);
+            vertical-align: middle;
+            color: var(--text);
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background 0.12s; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        .mono { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 0.68rem; }
+
+        .score-cell { display: flex; align-items: center; gap: 7px; }
+        .score-track { width: 70px; height: 4px; background: var(--wire2); border-radius: 2px; overflow: hidden; }
+        .score-fill  { height: 100%; border-radius: 2px; transition: width 0.5s; }
+        .score-num   { font-size: 0.68rem; font-weight: 600; min-width: 28px; }
+
+        /* ══════════════════════════════════════════════════════════
+           BUTTONS
+           ══════════════════════════════════════════════════════════ */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--r-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.18s;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+        .btn-amber {
+            background: var(--amber);
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 0 20px var(--amber-g);
+        }
+        .btn-amber:hover { box-shadow: 0 0 30px var(--amber-g); transform: translateY(-1px); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--wire2);
+        }
+        .btn-ghost:hover { color: var(--text); border-color: var(--wire3); background: rgba(255,255,255,0.03); }
+        .btn-danger {
+            background: var(--red-d);
+            color: var(--red);
+            border: 1px solid rgba(255,71,87,.25);
+        }
+        .btn-danger:hover { background: rgba(255,71,87,.2); }
+        .btn-success {
+            background: var(--green-d);
+            color: var(--green);
+            border: 1px solid rgba(46,213,115,.25);
+        }
+        .btn-success:hover { background: rgba(46,213,115,.18); }
+        .btn-sm { padding: 5px 10px; font-size: 0.62rem; }
+        .btn-full { width: 100%; }
+
+        /* ══════════════════════════════════════════════════════════
+           FILTER CHIPS
+           ══════════════════════════════════════════════════════════ */
+        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .fc {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.62rem;
+            letter-spacing: 0.07em;
+            cursor: pointer;
+            border: 1px solid var(--wire2);
+            background: transparent;
+            color: var(--text3);
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.16s;
+        }
+        .fc:hover { color: var(--text); border-color: var(--wire3); }
+        .fc.on { background: var(--amber-d); border-color: rgba(245,166,35,.35); color: var(--amber); }
+
+        /* ══════════════════════════════════════════════════════════
+           FORMS
+           ══════════════════════════════════════════════════════════ */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid .span2 { grid-column: 1/-1; }
+        .fg { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); }
+        .fi, .fs, .ft {
+            background: var(--ink3);
+            border: 1px solid var(--wire2);
+            border-radius: var(--r-sm);
+            padding: 9px 12px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            outline: none;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            width: 100%;
+        }
+        .fi:focus, .fs:focus, .ft:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 2px var(--amber-d);
+        }
+        .fs { cursor: pointer; }
+        .fs option { background: var(--ink3); }
+        .ft { resize: vertical; min-height: 90px; }
+
+        /* Upload */
+        .upload-zone {
+            border: 2px dashed var(--wire2);
+            border-radius: var(--r);
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-zone:hover { border-color: var(--amber); background: var(--amber-d); }
+        .upload-zone .ui { font-size: 2rem; margin-bottom: 10px; }
+        .upload-zone p { font-size: 0.72rem; color: var(--text3); }
+        .upload-zone strong { color: var(--amber); }
+
+        /* ══════════════════════════════════════════════════════════
+           SCORE GAUGE (SVG arc)
+           ══════════════════════════════════════════════════════════ */
+        .gauge-wrap { text-align: center; }
+        .gauge-svg { width: 140px; height: 80px; }
+
+        /* ══════════════════════════════════════════════════════════
+           FACTOR BARS
+           ══════════════════════════════════════════════════════════ */
+        .factor { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+        .factor-lbl { font-size: 0.67rem; color: var(--text2); flex: 1; }
+        .factor-track { width: 100px; height: 4px; background: var(--wire2); border-radius: 2px; overflow: hidden; }
+        .factor-fill { height: 100%; border-radius: 2px; }
+        .factor-val { font-size: 0.65rem; min-width: 30px; text-align: right; }
+
+        /* ══════════════════════════════════════════════════════════
+           BAR CHARTS
+           ══════════════════════════════════════════════════════════ */
+        .bar-row { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+        .bar-lbl { font-size: 0.65rem; color: var(--text2); width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bar-track { flex: 1; height: 7px; background: var(--wire2); border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+        .bar-pct { font-size: 0.63rem; color: var(--text3); min-width: 30px; text-align: right; }
+
+        /* ══════════════════════════════════════════════════════════
+           DONUT CHART
+           ══════════════════════════════════════════════════════════ */
+        .donut-row { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 16px 0; }
+        .legend { display: flex; flex-direction: column; gap: 9px; }
+        .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.7rem; }
+        .ldot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ══════════════════════════════════════════════════════════
+           TIMELINE
+           ══════════════════════════════════════════════════════════ */
+        .tl { padding: 4px 0; }
+        .tl-item { display: flex; gap: 12px; margin-bottom: 14px; }
+        .tl-spine { display: flex; flex-direction: column; align-items: center; }
+        .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+        .tl-dot.amber  { background: var(--amber); box-shadow: 0 0 8px var(--amber-g); }
+        .tl-dot.green  { background: var(--green); box-shadow: 0 0 8px var(--green-g); }
+        .tl-dot.cyan   { background: var(--cyan);  box-shadow: 0 0 8px var(--cyan-g);  }
+        .tl-tail { flex: 1; width: 1px; background: var(--wire); margin-top: 3px; }
+        .tl-content { flex: 1; }
+        .tl-title { font-size: 0.72rem; color: var(--text); }
+        .tl-time  { font-size: 0.6rem;  color: var(--text3); margin-top: 2px; }
+
+        /* ══════════════════════════════════════════════════════════
+           DETAIL GRID
+           ══════════════════════════════════════════════════════════ */
+        .detail-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+        .detail-card {
+            background: var(--ink3);
+            border: 1px solid var(--wire);
+            border-radius: var(--r-sm);
+            padding: 14px 16px;
+        }
+        .dc-lbl { font-size: 0.58rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+        .dc-val { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+
+        /* ══════════════════════════════════════════════════════════
+           SCAN ANIMATION
+           ══════════════════════════════════════════════════════════ */
+        .scan-box {
+            background: var(--ink3);
+            border: 1px solid var(--wire2);
+            border-radius: var(--r);
+            padding: 26px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .scan-bar {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--amber), transparent);
+            animation: scanMove 2.2s ease-in-out infinite;
+        }
+        @keyframes scanMove { 0%{top:-2px} 100%{top:100%} }
+        .scan-label { font-size: 0.62rem; color: var(--amber); letter-spacing: 0.14em; margin-top: 8px; }
+
+        /* ══════════════════════════════════════════════════════════
+           FLAG TAGS
+           ══════════════════════════════════════════════════════════ */
+        .flag-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            background: var(--red-d);
+            color: var(--red);
+            border: 1px solid rgba(255,71,87,.2);
+            margin: 2px;
+        }
+        .flag-tag.warn {
+            background: var(--amber-d);
+            color: var(--amber);
+            border-color: rgba(245,166,35,.2);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           HIGH-RISK CARD (flagged page)
+           ══════════════════════════════════════════════════════════ */
+        .risk-card {
+            background: var(--ink2);
+            border: 1px solid rgba(255,71,87,.2);
+            border-left: 3px solid var(--red);
+            border-radius: var(--r);
+            padding: 18px 20px;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+        .risk-card:hover { border-color: rgba(255,71,87,.4); }
+        .risk-card.med {
+            border-left-color: var(--amber);
+            border-color: rgba(245,166,35,.2);
+        }
+        .risk-card-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+        .risk-card-info { flex: 1; min-width: 200px; }
+        .risk-card-id { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .risk-card-name { font-size: 0.75rem; color: var(--text); margin-bottom: 3px; }
+        .risk-card-meta { font-size: 0.62rem; color: var(--text3); }
+        .risk-card-flags { display: flex; flex-wrap: wrap; flex: 1; min-width: 200px; align-content: flex-start; }
+        .risk-card-actions { display: flex; gap: 7px; align-items: flex-start; flex-shrink: 0; }
+
+        /* ══════════════════════════════════════════════════════════
+           MODAL
+           ══════════════════════════════════════════════════════════ */
+        .overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .overlay.open { display: flex; }
+        .modal {
+            background: var(--ink2);
+            border: 1px solid var(--wire3);
+            border-radius: 14px;
+            width: 600px;
+            max-width: 96vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalPop 0.22s ease;
+            box-shadow: var(--shadow);
+        }
+        @keyframes modalPop { from{transform:scale(.94);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid var(--wire);
+            position: sticky; top: 0; background: var(--ink2); z-index: 1;
+        }
+        .modal-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05rem; font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .modal-x { cursor: pointer; font-size: 1.1rem; color: var(--text3); transition: color 0.15s; padding: 4px; }
+        .modal-x:hover { color: var(--text); }
+        .modal-body { padding: 20px 22px; }
+
+        /* ══════════════════════════════════════════════════════════
+           TOASTS
+           ══════════════════════════════════════════════════════════ */
+        #toast-zone {
+            position: fixed; top: 64px; right: 20px;
+            z-index: 9999;
+            display: flex; flex-direction: column; gap: 7px;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--ink3);
+            border: 1px solid var(--wire3);
+            border-radius: var(--r);
+            padding: 11px 15px;
+            display: flex; align-items: center; gap: 9px;
+            font-size: 0.7rem;
+            min-width: 270px;
+            max-width: 340px;
+            box-shadow: var(--shadow);
+            pointer-events: all;
+            animation: toastIn 0.25s ease;
+        }
+        @keyframes toastIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+        .toast.out { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastOut { to{transform:translateX(110%);opacity:0} }
+        .toast .ti { font-size: 1rem; }
+        .toast-msg { flex: 1; }
+        .toast-cls { cursor: pointer; color: var(--text3); font-size: 0.75rem; }
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.danger  { border-left: 3px solid var(--red);   }
+        .toast.warn    { border-left: 3px solid var(--amber);  }
+        .toast.info    { border-left: 3px solid var(--cyan);   }
+
+        /* ══════════════════════════════════════════════════════════
+           MISC UTILITIES
+           ══════════════════════════════════════════════════════════ */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        .mb8  { margin-bottom: 8px;  }
+        .mb14 { margin-bottom: 14px; }
+        .mb20 { margin-bottom: 20px; }
+        .mb26 { margin-bottom: 26px; }
+        .mt12 { margin-top: 12px;    }
+        .mt16 { margin-top: 16px;    }
+        .gap8 { gap: 8px; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .flex-gap8 { display: flex; gap: 8px; }
+        .wrap { flex-wrap: wrap; }
+        .center { text-align: center; }
+        .dim { color: var(--text3); font-size: 0.68rem; }
+        .label-text {
+            font-size: 0.6rem; letter-spacing: 0.14em;
+            text-transform: uppercase; color: var(--text3);
+        }
+        .section-heading {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: #fff;
+        }
+        .divider { height: 1px; background: var(--wire); margin: 20px 0; }
+
+        /* SVG chart axes */
+        .axis { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
+        .axis-label { fill: rgba(255,255,255,0.25); font-size: 9px; font-family: 'JetBrains Mono',monospace; }
+
+        /* ══════════════════════════════════════════════════════════
+           LOADING SPINNER
+           ══════════════════════════════════════════════════════════ */
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--wire2);
+            border-top-color: var(--amber);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        /* ══════════════════════════════════════════════════════════
+           SETTINGS TOGGLE
+           ══════════════════════════════════════════════════════════ */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--wire);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info .ti-title { font-size: 0.75rem; color: var(--text); margin-bottom: 3px; }
+        .toggle-info .ti-desc  { font-size: 0.62rem; color: var(--text3); }
+        .toggle {
+            width: 38px; height: 20px;
+            background: var(--wire2);
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .toggle.on { background: var(--amber); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .toggle.on::after { transform: translateX(18px); }
+
+        /* Chart container */
+        .chart-area { position: relative; overflow: hidden; }
+        .chart-label {
+            font-size: 9px;
+            font-family: 'JetBrains Mono', monospace;
+            fill: var(--text3);
+        }
+
+        /* Search overlay */
+        .search-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 900;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 80px;
+            backdrop-filter: blur(4px);
+        }
+        .search-overlay.open { display: flex; }
+        .search-box {
+            background: var(--ink2);
+            border: 1px solid var(--wire3);
+            border-radius: 12px;
+            width: 560px;
+            max-width: 96vw;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .search-input-row { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--wire); }
+        .search-input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        .search-results { max-height: 320px; overflow-y: auto; }
+        .sr-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: background 0.14s;
+            border-bottom: 1px solid var(--wire);
+        }
+        .sr-item:last-child { border-bottom: none; }
+        .sr-item:hover { background: var(--amber-d); }
+        .sr-badge { font-size: 0.6rem; padding: 1px 7px; border-radius: 3px; }
+        .sr-id { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 0.68rem; }
+        .sr-name { font-size: 0.72rem; color: var(--text); }
+        .sr-amount { margin-left: auto; font-size: 0.7rem; color: var(--text2); }
+
+        /* Model progress ring */
+        .progress-ring { transform: rotate(-90deg); }
+    </style>
+</head>
+<body>
+
+<div id="toast-zone"></div>
+
+<!-- ══════ SEARCH OVERLAY ══════ -->
+<div class="search-overlay" id="searchOverlay" onclick="if(event.target===this) closeSearch()">
+    <div class="search-box">
+        <div class="search-input-row">
+            <span style="font-size:1rem;opacity:.5">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search claims, policies, claimants…" oninput="runSearch(this.value)"/>
+            <span class="dim" style="cursor:pointer" onclick="closeSearch()">ESC</span>
+        </div>
+        <div class="search-results" id="searchResults">
+            <div style="padding:20px;text-align:center;color:var(--text3);font-size:0.7rem">Type to search claims…</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════ INVESTIGATION MODAL ══════ -->
+<div class="overlay" id="investigateModal">
+    <div class="modal">
+        <div class="modal-head">
+            <div>
+                <div class="modal-title">🔍 Fraud Investigation</div>
+                <div class="dim" id="modal-cid" style="margin-top:2px">CLM-20240615-001</div>
+            </div>
+            <span class="modal-x" onclick="closeModal('investigateModal')">✕</span>
+        </div>
+        <div class="modal-body">
+            <!-- Score + Explanation -->
+            <div class="flex gap8 mb20" style="align-items:flex-start;gap:20px">
+                <div class="gauge-wrap" style="flex-shrink:0">
+                    <div class="label-text mb8">Fraud Probability</div>
+                    <svg class="gauge-svg" viewBox="0 0 140 80">
+                        <path d="M 20 72 A 50 50 0 0 1 120 72" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>
+                        <path id="gauge-arc" d="M 20 72 A 50 50 0 0 1 120 72" fill="none" stroke="var(--red)" stroke-width="10" stroke-linecap="round"
+                              stroke-dasharray="157" stroke-dashoffset="16"/>
+                        <text x="70" y="68" text-anchor="middle" fill="#fff" font-family="Rajdhani,sans-serif" font-weight="700" font-size="22" id="gauge-val">0.91</text>
+                    </svg>
+                    <span class="risk H" id="modal-risk-badge">HIGH</span>
+                </div>
+                <div style="flex:1">
+                    <div class="label-text mb8">AI Explanation — Feature Contributions</div>
+                    <div id="modal-factors"></div>
+                </div>
+            </div>
+
+            <!-- Flags -->
+            <div class="mb20">
+                <div class="label-text mb8">Active Rule Flags</div>
+                <div id="modal-flags"></div>
+            </div>
+
+            <!-- Claimant History -->
+            <div class="detail-grid mb20">
+                <div class="detail-card"><div class="dc-lbl">Claims (30d)</div><div class="dc-val" id="mi-c30">3</div></div>
+                <div class="detail-card"><div class="dc-lbl">Claims (90d)</div><div class="dc-val" id="mi-c90">7</div></div>
+                <div class="detail-card"><div class="dc-lbl">Avg Claim Amt</div><div class="dc-val" id="mi-avg">$24,100</div></div>
+            </div>
+
+            <!-- Decision -->
+            <div class="fg mb14">
+                <label>Investigation Decision</label>
+                <select class="fs" id="decisionSelect">
+                    <option value="">— Select decision —</option>
+                    <option value="confirmed_fraud">✗ Confirmed Fraud — Reject Claim</option>
+                    <option value="cleared">✓ Cleared — Approve Claim</option>
+                    <option value="escalated">⬆ Escalate to Senior Investigator</option>
+                </select>
+            </div>
+            <div class="fg mb20">
+                <label>Investigator Notes</label>
+                <textarea class="ft" style="min-height:75px" placeholder="Document your findings and reasoning…"></textarea>
+            </div>
+            <div class="flex-gap8" style="justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeModal('investigateModal')">Cancel</button>
+                <button class="btn btn-amber" onclick="submitDecision()">Submit Decision</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════ SHELL ══════ -->
+<div class="shell">
+
+    <!-- ══════ SIDEBAR ══════ -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-row">
+                <div class="brand-shield">🛡</div>
+                <div class="brand-name">CLAIMWATCH</div>
+            </div>
+            <div class="brand-tag">AI Fraud Detection</div>
+        </div>
+
+        <nav class="nav">
+            <div class="nav-group-label">Overview</div>
+            <div class="nav-link active" onclick="nav(this,'dashboard')"><span class="ni">⬡</span>Dashboard</div>
+            <div class="nav-link" onclick="nav(this,'analytics')"><span class="ni">◈</span>Analytics</div>
+
+            <div class="nav-group-label">Claims</div>
+            <div class="nav-link" onclick="nav(this,'submit')"><span class="ni">＋</span>Submit Claim</div>
+            <div class="nav-link" onclick="nav(this,'claims')"><span class="ni">≡</span>All Claims<span class="nbadge warn" id="nb-all">284</span></div>
+
+            <div class="nav-group-label">Investigation</div>
+            <div class="nav-link" onclick="nav(this,'flagged')"><span class="ni">⚑</span>Flagged Claims<span class="nbadge danger" id="nb-flagged">7</span></div>
+            <div class="nav-link" onclick="nav(this,'review')"><span class="ni">◎</span>Review Queue<span class="nbadge warn" id="nb-review">12</span></div>
+
+            <div class="nav-group-label">System</div>
+            <div class="nav-link" onclick="nav(this,'model')"><span class="ni">⬡</span>Model Status</div>
+            <div class="nav-link" onclick="nav(this,'settings')"><span class="ni">⚙</span>Settings</div>
+        </nav>
+
+        <div class="sidebar-foot">
+            <div class="user-row">
+                <div class="u-avatar">SA</div>
+                <div>
+                    <div class="u-name">Sarah Ahmed</div>
+                    <div class="u-role">Senior Investigator</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══════ MAIN ══════ -->
+    <main class="main">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-title" id="topbar-title">Dashboard</div>
+            <div class="topbar-search" onclick="openSearch()">
+                <span>🔍</span> Search claims, policies…
+            </div>
+            <div class="pulse-badge"><div class="pulse-dot"></div>ML MODEL ACTIVE</div>
+            <div class="icon-btn" onclick="showNotifs()">🔔<div class="dot"></div></div>
+            <div class="icon-btn" onclick="nav(document.querySelector('.nav-link[onclick*=settings]'),'settings')">👤</div>
+        </header>
+
+        <!-- ══════════════════════ DASHBOARD ══════════════════════ -->
+        <div class="page active" id="pg-dashboard">
+            <div class="page-hero">
+                <h1>Fraud <em>Intelligence</em> Center</h1>
+                <p>Real-time monitoring · Last updated <span id="lastUpdate">just now</span></p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi" style="--kpi-color:var(--cyan)">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-label">Total Claims Today</div>
+                    <div class="kpi-val" id="kpi-total">284</div>
+                    <div class="kpi-sub up">▲ 12% vs yesterday</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--red)">
+                    <div class="kpi-icon">⚑</div>
+                    <div class="kpi-label">High Risk Flagged</div>
+                    <div class="kpi-val" id="kpi-high">23</div>
+                    <div class="kpi-sub down">▲ 5 new in last hour</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--amber)">
+                    <div class="kpi-icon">⏳</div>
+                    <div class="kpi-label">Pending Review</div>
+                    <div class="kpi-val" id="kpi-pending">41</div>
+                    <div class="kpi-sub neutral">Requires manual check</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--green)">
+                    <div class="kpi-icon">✓</div>
+                    <div class="kpi-label">Auto-Approved</div>
+                    <div class="kpi-val" id="kpi-approved">198</div>
+                    <div class="kpi-sub up">▲ 69.7% approval rate</div>
+                </div>
+            </div>
+
+            <div class="grid2 mb22" style="gap:16px;margin-bottom:22px">
+                <!-- Trend Chart -->
+                <div class="card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Fraud Detection Trend</div>
+                            <div class="card-sub">Claims submitted vs flagged — Last 14 days</div>
+                        </div>
+                        <div class="flex-gap8" style="font-size:0.62rem">
+                            <span style="color:var(--amber)">● Submitted</span>
+                            <span style="color:var(--red)">● Flagged</span>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding-bottom:12px">
+                        <div class="chart-area" style="height:170px">
+                            <svg width="100%" height="170" viewBox="0 0 500 170" preserveAspectRatio="none" id="trendChart">
+                                <defs>
+                                    <linearGradient id="ga1" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#f5a623" stop-opacity=".22"/>
+                                        <stop offset="100%" stop-color="#f5a623" stop-opacity="0"/>
+                                    </linearGradient>
+                                    <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#ff4757" stop-opacity=".18"/>
+                                        <stop offset="100%" stop-color="#ff4757" stop-opacity="0"/>
+                                    </linearGradient>
+                                </defs>
+                                <!-- Grid -->
+                                <line class="axis" x1="0" y1="42" x2="500" y2="42"/>
+                                <line class="axis" x1="0" y1="84" x2="500" y2="84"/>
+                                <line class="axis" x1="0" y1="126" x2="500" y2="126"/>
+                                <text class="axis-label" x="4" y="40">300</text>
+                                <text class="axis-label" x="4" y="82">200</text>
+                                <text class="axis-label" x="4" y="124">100</text>
+                                <!-- Submitted area -->
+                                <path d="M36,118 L72,100 L108,82 L144,92 L180,64 L216,74 L252,52 L288,58 L324,42 L360,48 L396,36 L432,54 L468,32 L500,40 L500,160 L36,160Z" fill="url(#ga1)"/>
+                                <path d="M36,118 L72,100 L108,82 L144,92 L180,64 L216,74 L252,52 L288,58 L324,42 L360,48 L396,36 L432,54 L468,32 L500,40" fill="none" stroke="#f5a623" stroke-width="2" stroke-linejoin="round"/>
+                                <!-- Flagged area -->
+                                <path d="M36,148 L72,138 L108,134 L144,141 L180,124 L216,130 L252,118 L288,122 L324,112 L360,116 L396,108 L432,118 L468,104 L500,110 L500,160 L36,160Z" fill="url(#ga2)"/>
+                                <path d="M36,148 L72,138 L108,134 L144,141 L180,124 L216,130 L252,118 L288,122 L324,112 L360,116 L396,108 L432,118 L468,104 L500,110" fill="none" stroke="#ff4757" stroke-width="1.5" stroke-linejoin="round"/>
+                                <!-- X labels -->
+                                <text class="axis-label" x="36"  y="164">Jun 1</text>
+                                <text class="axis-label" x="144" y="164">Jun 5</text>
+                                <text class="axis-label" x="252" y="164">Jun 9</text>
+                                <text class="axis-label" x="360" y="164">Jun 13</text>
+                                <text class="axis-label" x="468" y="164">Jun 15</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donut -->
+                <div class="card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Risk Distribution</div>
+                            <div class="card-sub">This week · 1,284 claims</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="donut-row">
+                            <svg width="120" height="120" viewBox="0 0 42 42">
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#1c1d2e" stroke-width="8"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#ff4757" stroke-width="8"
+                                        stroke-dasharray="23 77" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#f5a623" stroke-width="8"
+                                        stroke-dasharray="34 66" stroke-dashoffset="2" transform="rotate(-90 21 21)"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#2ed573" stroke-width="8"
+                                        stroke-dasharray="43 57" stroke-dashoffset="-32" transform="rotate(-90 21 21)"/>
+                                <text x="21" y="24" text-anchor="middle" fill="#fff" font-family="Rajdhani,sans-serif" font-weight="700" font-size="6">1,284</text>
+                            </svg>
+                            <div class="legend">
+                                <div class="legend-item"><div class="ldot" style="background:var(--red)"></div>High Risk <strong style="margin-left:4px;color:#fff">23%</strong></div>
+                                <div class="legend-item"><div class="ldot" style="background:var(--amber)"></div>Medium <strong style="margin-left:4px;color:#fff">34%</strong></div>
+                                <div class="legend-item"><div class="ldot" style="background:var(--green)"></div>Low Risk <strong style="margin-left:4px;color:#fff">43%</strong></div>
+                            </div>
+                        </div>
+                        <div class="divider" style="margin:10px 0"></div>
+                        <div class="bar-row"><div class="bar-lbl">Confirmed Fraud</div><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--red)"></div></div><div class="bar-pct">18%</div></div>
+                        <div class="bar-row"><div class="bar-lbl">False Positives</div><div class="bar-track"><div class="bar-fill" style="width:3%;background:var(--amber)"></div></div><div class="bar-pct">3.1%</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Claims Table -->
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Recent Claims</div>
+                        <div class="card-sub">Auto-scored on submission by ML model v1.0</div>
+                    </div>
+                    <div class="flex-gap8">
+                        <button class="fc on" onclick="dashFilter(this,'all')">All</button>
+                        <button class="fc" onclick="dashFilter(this,'H')">High</button>
+                        <button class="fc" onclick="dashFilter(this,'M')">Medium</button>
+                        <button class="fc" onclick="dashFilter(this,'L')">Low</button>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table id="dashTable">
+                        <thead>
+                        <tr>
+                            <th>Claim ID</th><th>Type</th><th>Amount</th>
+                            <th>Risk</th><th>Fraud Score</th>
+                            <th>Status</th><th>Submitted</th><th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="dashTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ SUBMIT CLAIM ══════════════════════ -->
+        <div class="page" id="pg-submit">
+            <div class="page-hero">
+                <h1>Submit <em>New</em> Claim</h1>
+                <p>Claims are automatically fraud-scored in &lt;500ms upon submission.</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+                <!-- Form -->
+                <div>
+                    <div class="card mb14">
+                        <div class="card-head"><div class="card-title">Claim Details</div></div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="fg">
+                                    <label>Policy Number *</label>
+                                    <input class="fi" type="text" id="f-policy" placeholder="POL-XXXX-XXXX"/>
+                                </div>
+                                <div class="fg">
+                                    <label>Claim Type *</label>
+                                    <select class="fs" id="f-type">
+                                        <option value="">Select type…</option>
+                                        <option>Auto</option><option>Health</option>
+                                        <option>Property</option><option>Life</option><option>Travel</option>
+                                    </select>
+                                </div>
+                                <div class="fg">
+                                    <label>Claim Amount (USD) *</label>
+                                    <input class="fi" type="number" id="f-amount" placeholder="0.00" min="0"/>
+                                </div>
+                                <div class="fg">
+                                    <label>Incident Date *</label>
+                                    <input class="fi" type="date" id="f-date"/>
+                                </div>
+                                <div class="fg span2">
+                                    <label>Incident Location *</label>
+                                    <input class="fi" type="text" id="f-loc" placeholder="Street address, city, state"/>
+                                </div>
+                                <div class="fg span2">
+                                    <label>Claimant Full Name *</label>
+                                    <input class="fi" type="text" id="f-name" placeholder="Full legal name"/>
+                                </div>
+                                <div class="fg span2">
+                                    <label>Description of Incident *</label>
+                                    <textarea class="ft" id="f-desc" placeholder="Provide a detailed description…"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><div class="card-title">Supporting Documents</div></div>
+                        <div class="card-body">
+                            <div class="upload-zone" onclick="handleUploadClick()">
+                                <div class="ui">📎</div>
+                                <p>Drag & drop or <strong>browse files</strong></p>
+                                <p style="font-size:0.62rem;margin-top:5px">PDF, JPG, PNG up to 10MB</p>
+                            </div>
+                            <div id="doc-list" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                                <div style="background:var(--ink3);border:1px solid var(--wire);border-radius:var(--r-sm);padding:9px 12px;display:flex;align-items:center;gap:8px">
+                                    <span>📄</span>
+                                    <div style="flex:1;min-width:0">
+                                        <div style="font-size:0.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">police_report.pdf</div>
+                                        <div class="dim">218 KB</div>
+                                    </div>
+                                    <span style="color:var(--green)">✓</span>
+                                </div>
+                                <div style="background:var(--ink3);border:1px solid var(--wire);border-radius:var(--r-sm);padding:9px 12px;display:flex;align-items:center;gap:8px">
+                                    <span>🖼</span>
+                                    <div style="flex:1;min-width:0">
+                                        <div style="font-size:0.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">damage_photo.jpg</div>
+                                        <div class="dim">1.4 MB</div>
+                                    </div>
+                                    <span style="color:var(--green)">✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Sidebar -->
+                <div>
+                    <div class="scan-box mb14">
+                        <div class="scan-bar"></div>
+                        <div style="font-size:2.2rem;margin-bottom:8px">🤖</div>
+                        <div class="section-heading mb8">AI Fraud Engine</div>
+                        <div class="scan-label">READY TO ANALYZE</div>
+                        <div class="dim" style="margin-top:10px;line-height:1.6">Random Forest v1.0 · 94.2% accuracy<br>23 features · Real-time scoring</div>
+                    </div>
+
+                    <div class="card mb14">
+                        <div class="card-head"><div class="card-title">Live Risk Preview</div></div>
+                        <div class="card-body">
+                            <div id="riskPreview">
+                                <div class="factor">
+                                    <div class="factor-lbl">Claim Amount</div>
+                                    <div class="factor-track"><div class="factor-fill" style="width:30%;background:var(--green)"></div></div>
+                                    <div class="factor-val" style="color:var(--green)">LOW</div>
+                                </div>
+                                <div class="factor">
+                                    <div class="factor-lbl">Claim Frequency</div>
+                                    <div class="factor-track"><div class="factor-fill" style="width:10%;background:var(--green)"></div></div>
+                                    <div class="factor-val" style="color:var(--green)">LOW</div>
+                                </div>
+                                <div class="factor">
+                                    <div class="factor-lbl">Coverage Ratio</div>
+                                    <div class="factor-track"><div class="factor-fill" style="width:55%;background:var(--amber)"></div></div>
+                                    <div class="factor-val" style="color:var(--amber)">MED</div>
+                                </div>
+                                <div class="factor">
+                                    <div class="factor-lbl">Doc Completeness</div>
+                                    <div class="factor-track"><div class="factor-fill" style="width:85%;background:var(--cyan)"></div></div>
+                                    <div class="factor-val" style="color:var(--cyan)">HIGH</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-amber btn-full" style="padding:13px;font-size:0.78rem" id="submitBtn" onclick="doSubmitClaim()">
+                        ⚡ Submit &amp; Analyze Claim
+                    </button>
+                    <div class="dim center mt12">Score computed in &lt;500ms</div>
+
+                    <!-- Result panel (hidden by default) -->
+                    <div id="scoreResult" style="display:none;margin-top:14px">
+                        <div class="card" style="border-color:var(--green);background:var(--green-d)">
+                            <div class="card-body center">
+                                <div style="font-size:2rem;margin-bottom:6px">✅</div>
+                                <div class="section-heading mb8">Score: <span id="sr-val">0.14</span></div>
+                                <span class="risk L" id="sr-badge">LOW RISK</span>
+                                <div class="dim mt12">Claim auto-approved for processing.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ ALL CLAIMS ══════════════════════ -->
+        <div class="page" id="pg-claims">
+            <div class="page-hero">
+                <h1>All <em>Claims</em></h1>
+                <p id="claims-count">1,284 total claims · Showing all</p>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="filter-row">
+                        <button class="fc on" onclick="filterClaims(this,'all')">All</button>
+                        <button class="fc" onclick="filterClaims(this,'Auto')">Auto</button>
+                        <button class="fc" onclick="filterClaims(this,'Health')">Health</button>
+                        <button class="fc" onclick="filterClaims(this,'Property')">Property</button>
+                        <button class="fc" onclick="filterClaims(this,'Travel')">Travel</button>
+                        <button class="fc" onclick="filterClaims(this,'Life')">Life</button>
+                    </div>
+                    <div class="flex-gap8">
+                        <select class="fs" style="width:130px;font-size:0.65rem;padding:5px 8px" onchange="sortClaims(this.value)">
+                            <option value="date">Sort: Newest</option>
+                            <option value="amount">Sort: Amount</option>
+                            <option value="score">Sort: Risk Score</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Claim ID</th><th>Claimant</th><th>Type</th>
+                            <th>Amount</th><th>Risk</th><th>Score</th>
+                            <th>Status</th><th>Date</th><th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="allClaimsTbody"></tbody>
+                    </table>
+                </div>
+                <div style="padding:14px 22px;border-top:1px solid var(--wire);display:flex;align-items:center;justify-content:space-between">
+                    <div class="dim" id="paginationInfo">Showing 1–10 of 20 claims</div>
+                    <div class="flex-gap8">
+                        <button class="btn btn-ghost btn-sm" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+                        <span class="dim" id="pageIndicator" style="line-height:2">Page 1/2</span>
+                        <button class="btn btn-ghost btn-sm" id="nextBtn" onclick="changePage(1)">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ FLAGGED CLAIMS ══════════════════════ -->
+        <div class="page" id="pg-flagged">
+            <div class="page-hero">
+                <h1><em>High-Risk</em> Flagged Claims</h1>
+                <p id="flagged-count">7 claims requiring immediate investigation</p>
+            </div>
+
+            <div class="flex-between mb20" style="gap:12px;flex-wrap:wrap">
+                <div class="filter-row">
+                    <button class="fc on" onclick="filterFlagged(this,'all')">All Flagged</button>
+                    <button class="fc" onclick="filterFlagged(this,'H')">High Risk</button>
+                    <button class="fc" onclick="filterFlagged(this,'M')">Medium Risk</button>
+                </div>
+                <button class="btn btn-amber btn-sm" onclick="bulkEscalate()">⬆ Bulk Escalate Selected</button>
+            </div>
+
+            <div id="flaggedList"></div>
+        </div>
+
+        <!-- ══════════════════════ REVIEW QUEUE ══════════════════════ -->
+        <div class="page" id="pg-review">
+            <div class="page-hero">
+                <h1>Review <em>Queue</em></h1>
+                <p>Claims assigned for manual agent verification</p>
+            </div>
+
+            <div class="grid2 mb20" style="gap:16px">
+                <div class="kpi" style="--kpi-color:var(--amber)">
+                    <div class="kpi-label">In Queue</div>
+                    <div class="kpi-val">12</div>
+                    <div class="kpi-sub neutral">Medium-risk claims</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--cyan)">
+                    <div class="kpi-label">Avg Review Time</div>
+                    <div class="kpi-val">4.2<span style="font-size:1rem">h</span></div>
+                    <div class="kpi-sub up">▲ Faster than SLA</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head"><div class="card-title">Assigned Claims</div><button class="btn btn-ghost btn-sm" onclick="toast('Queue refreshed','info')">↺ Refresh</button></div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Claim ID</th><th>Claimant</th><th>Type</th><th>Amount</th><th>Risk</th><th>Assigned To</th><th>Due</th><th></th></tr></thead>
+                        <tbody id="reviewTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ ANALYTICS ══════════════════════ -->
+        <div class="page" id="pg-analytics">
+            <div class="page-hero">
+                <h1>Analytics &amp; <em>Reporting</em></h1>
+                <p>Fraud intelligence, trends, and model performance insights</p>
+            </div>
+
+            <div class="kpi-grid mb22">
+                <div class="kpi" style="--kpi-color:var(--red)">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Fraud Prevented (30d)</div>
+                    <div class="kpi-val" style="font-size:1.6rem">$2.4M</div>
+                    <div class="kpi-sub up">▲ 18% vs last month</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--green)">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-label">Model Accuracy</div>
+                    <div class="kpi-val">94.2%</div>
+                    <div class="kpi-sub up">▲ 1.1% after retrain</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--amber)">
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-label">Avg Score Time</div>
+                    <div class="kpi-val">342<span style="font-size:1rem">ms</span></div>
+                    <div class="kpi-sub up">Real-time</div>
+                </div>
+                <div class="kpi" style="--kpi-color:var(--cyan)">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">False Positive Rate</div>
+                    <div class="kpi-val">3.1%</div>
+                    <div class="kpi-sub down">▼ 0.4% improvement</div>
+                </div>
+            </div>
+
+            <div class="grid2 mb20" style="gap:16px">
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Top Fraud Patterns</div><div class="card-sub">Rule flags on high-risk claims</div></div>
+                    <div class="card-body" id="patternBars"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Claims by Type</div><div class="card-sub">Fraud rate per category</div></div>
+                    <div class="card-body">
+                        <div class="donut-row">
+                            <svg width="130" height="130" viewBox="0 0 42 42">
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#1c1d2e" stroke-width="8"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#00d4ff" stroke-width="8" stroke-dasharray="35 65" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#ff4757" stroke-width="8" stroke-dasharray="28 72" stroke-dashoffset="-10" transform="rotate(-90 21 21)"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#2ed573" stroke-width="8" stroke-dasharray="20 80" stroke-dashoffset="-38" transform="rotate(-90 21 21)"/>
+                                <circle cx="21" cy="21" r="16" fill="transparent" stroke="#f5a623" stroke-width="8" stroke-dasharray="17 83" stroke-dashoffset="-58" transform="rotate(-90 21 21)"/>
+                                <text x="21" y="24" text-anchor="middle" fill="#fff" font-family="Rajdhani,sans-serif" font-weight="700" font-size="5">Fraud Mix</text>
+                            </svg>
+                            <div class="legend">
+                                <div class="legend-item"><div class="ldot" style="background:var(--cyan)"></div>Auto — <strong style="color:#fff">35%</strong></div>
+                                <div class="legend-item"><div class="ldot" style="background:var(--red)"></div>Health — <strong style="color:#fff">28%</strong></div>
+                                <div class="legend-item"><div class="ldot" style="background:var(--green)"></div>Property — <strong style="color:#fff">20%</strong></div>
+                                <div class="legend-item"><div class="ldot" style="background:var(--amber)"></div>Travel — <strong style="color:#fff">17%</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Volume Chart -->
+            <div class="card">
+                <div class="card-head"><div class="card-title">Monthly Fraud Amount Prevented</div><div class="card-sub">USD · Last 6 months</div></div>
+                <div class="card-body">
+                    <svg width="100%" height="130" viewBox="0 0 600 130" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="barG" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#f5a623" stop-opacity=".9"/>
+                                <stop offset="100%" stop-color="#f5a623" stop-opacity=".3"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="30"  y="80" width="60" height="40" rx="3" fill="url(#barG)" opacity=".8"/>
+                        <rect x="130" y="60" width="60" height="60" rx="3" fill="url(#barG)" opacity=".8"/>
+                        <rect x="230" y="50" width="60" height="70" rx="3" fill="url(#barG)" opacity=".8"/>
+                        <rect x="330" y="30" width="60" height="90" rx="3" fill="url(#barG)" opacity=".8"/>
+                        <rect x="430" y="20" width="60" height="100" rx="3" fill="url(#barG)" opacity=".8"/>
+                        <rect x="530" y="10" width="60" height="110" rx="3" fill="url(#barG)"/>
+                        <text x="60"  y="126" text-anchor="middle" class="axis-label">Jan</text>
+                        <text x="160" y="126" text-anchor="middle" class="axis-label">Feb</text>
+                        <text x="260" y="126" text-anchor="middle" class="axis-label">Mar</text>
+                        <text x="360" y="126" text-anchor="middle" class="axis-label">Apr</text>
+                        <text x="460" y="126" text-anchor="middle" class="axis-label">May</text>
+                        <text x="560" y="126" text-anchor="middle" class="axis-label">Jun</text>
+                        <text x="60"  y="76" text-anchor="middle" class="axis-label">$1.1M</text>
+                        <text x="160" y="56" text-anchor="middle" class="axis-label">$1.4M</text>
+                        <text x="260" y="46" text-anchor="middle" class="axis-label">$1.6M</text>
+                        <text x="360" y="26" text-anchor="middle" class="axis-label">$1.9M</text>
+                        <text x="460" y="16" text-anchor="middle" class="axis-label">$2.1M</text>
+                        <text x="560" y="6"  text-anchor="middle" class="axis-label">$2.4M</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ MODEL STATUS ══════════════════════ -->
+        <div class="page" id="pg-model">
+            <div class="page-hero">
+                <h1>Model <em>Status</em> &amp; Training</h1>
+                <p>Random Forest Classifier · v1.0.0 · Scikit-learn</p>
+            </div>
+
+            <div class="detail-grid mb20">
+                <div class="detail-card"><div class="dc-lbl">ROC-AUC Score</div><div class="dc-val" style="color:var(--green)">0.947</div></div>
+                <div class="detail-card"><div class="dc-lbl">PR-AUC Score</div><div class="dc-val" style="color:var(--green)">0.912</div></div>
+                <div class="detail-card"><div class="dc-lbl">Precision</div><div class="dc-val">94.2%</div></div>
+                <div class="detail-card"><div class="dc-lbl">Recall</div><div class="dc-val">91.8%</div></div>
+                <div class="detail-card"><div class="dc-lbl">Training Samples</div><div class="dc-val">48,240</div></div>
+                <div class="detail-card"><div class="dc-lbl">Last Retrained</div><div class="dc-val">Jun 10, 2024</div></div>
+            </div>
+
+            <div class="grid2 mb20" style="gap:16px">
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Feature Importances</div></div>
+                    <div class="card-body" id="featureBars"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Confusion Matrix</div><div class="card-sub">Test set · 9,648 samples</div></div>
+                    <div class="card-body">
+                        <table style="width:100%;font-size:0.7rem;border-collapse:collapse">
+                            <thead>
+                            <tr>
+                                <th style="padding:8px;background:transparent;color:var(--text3);font-weight:400"></th>
+                                <th style="padding:8px;background:var(--ink3);color:var(--text3);font-size:0.6rem;border:1px solid var(--wire)">Pred: Legit</th>
+                                <th style="padding:8px;background:var(--ink3);color:var(--text3);font-size:0.6rem;border:1px solid var(--wire)">Pred: Fraud</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="padding:8px;background:var(--ink3);color:var(--text3);font-size:0.6rem;border:1px solid var(--wire)">Actual: Legit</td>
+                                <td style="padding:12px;background:var(--green-d);color:var(--green);text-align:center;font-weight:700;border:1px solid var(--wire);font-size:1rem">7,891</td>
+                                <td style="padding:12px;background:var(--red-d);color:var(--red);text-align:center;font-weight:700;border:1px solid var(--wire);font-size:1rem">298</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px;background:var(--ink3);color:var(--text3);font-size:0.6rem;border:1px solid var(--wire)">Actual: Fraud</td>
+                                <td style="padding:12px;background:var(--amber-d);color:var(--amber);text-align:center;font-weight:700;border:1px solid var(--wire);font-size:1rem">121</td>
+                                <td style="padding:12px;background:var(--green-d);color:var(--green);text-align:center;font-weight:700;border:1px solid var(--wire);font-size:1rem">1,338</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="dim mt12" style="line-height:1.8">
+                            True Positive Rate: <strong style="color:var(--green)">91.7%</strong><br>
+                            False Positive Rate: <strong style="color:var(--amber)">3.6%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Training History</div>
+                        <div class="card-sub">Model versioning and performance over time</div>
+                    </div>
+                    <div class="flex-gap8">
+                        <button class="btn btn-ghost btn-sm" onclick="toast('Scheduling retrain job…','info');setTimeout(()=>toast('Retrain queued for midnight UTC','success'),1200)">Schedule Retrain</button>
+                        <button class="btn btn-amber btn-sm" id="retrainBtn" onclick="triggerRetrain()">⟳ Trigger Now</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="tl">
+                        <div class="tl-item">
+                            <div class="tl-spine"><div class="tl-dot amber"></div><div class="tl-tail"></div></div>
+                            <div class="tl-content"><div class="tl-title">v1.0.0 deployed — ROC-AUC: 0.947, 48,240 samples, SMOTE balancing</div><div class="tl-time">Jun 10, 2024 · 09:14 UTC</div></div>
+                        </div>
+                        <div class="tl-item">
+                            <div class="tl-spine"><div class="tl-dot green"></div><div class="tl-tail"></div></div>
+                            <div class="tl-content"><div class="tl-title">v0.9.2 retrained — False positive rate improved by 1.2%</div><div class="tl-time">May 8, 2024 · 11:30 UTC</div></div>
+                        </div>
+                        <div class="tl-item">
+                            <div class="tl-spine"><div class="tl-dot cyan"></div><div class="tl-tail"></div></div>
+                            <div class="tl-content"><div class="tl-title">Added duplicate_score feature — Recall improved to 91.8%</div><div class="tl-time">Apr 3, 2024 · 14:20 UTC</div></div>
+                        </div>
+                        <div class="tl-item">
+                            <div class="tl-spine"><div class="tl-dot amber"></div></div>
+                            <div class="tl-content"><div class="tl-title">v0.8.0 initial deployment — ROC-AUC: 0.891</div><div class="tl-time">Mar 1, 2024 · 08:00 UTC</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════ SETTINGS ══════════════════════ -->
+        <div class="page" id="pg-settings">
+            <div class="page-hero">
+                <h1>System <em>Settings</em></h1>
+                <p>Configure thresholds, alerts, and system preferences</p>
+            </div>
+
+            <div class="grid2" style="gap:16px;align-items:start">
+                <!-- Thresholds -->
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Fraud Score Thresholds</div></div>
+                    <div class="card-body">
+                        <div class="fg mb14">
+                            <label>High Risk Threshold (auto-flag for investigation)</label>
+                            <input class="fi" type="number" id="s-high" value="0.70" step="0.01" min="0" max="1"/>
+                        </div>
+                        <div class="fg mb14">
+                            <label>Medium Risk Threshold (requires verification)</label>
+                            <input class="fi" type="number" id="s-med" value="0.40" step="0.01" min="0" max="1"/>
+                        </div>
+                        <div class="fg mb20">
+                            <label>Auto-Approve Below Score</label>
+                            <input class="fi" type="number" id="s-auto" value="0.40" step="0.01" min="0" max="1"/>
+                        </div>
+                        <button class="btn btn-amber" onclick="saveSettings()">Save Thresholds</button>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card">
+                    <div class="card-head"><div class="card-title">Notification Settings</div></div>
+                    <div class="card-body">
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="ti-title">High Risk Alerts</div>
+                                <div class="ti-desc">Notify when claim scores above high threshold</div>
+                            </div>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="ti-title">Duplicate Detection Alerts</div>
+                                <div class="ti-desc">Alert on potential duplicate claim submission</div>
+                            </div>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="ti-title">Model Accuracy Warnings</div>
+                                <div class="ti-desc">Alert when accuracy drops below 90%</div>
+                            </div>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="ti-title">Daily Summary Report</div>
+                                <div class="ti-desc">Email daily fraud summary at 08:00 UTC</div>
+                            </div>
+                            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="ti-title">Auto Model Retraining</div>
+                                <div class="ti-desc">Retrain model monthly with new labeled data</div>
+                            </div>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Config -->
+                <div class="card">
+                    <div class="card-head"><div class="card-title">API Configuration</div></div>
+                    <div class="card-body">
+                        <div class="fg mb14">
+                            <label>Backend API URL</label>
+                            <input class="fi" type="text" value="http://localhost:8000/api/v1"/>
+                        </div>
+                        <div class="fg mb14">
+                            <label>API Key</label>
+                            <input class="fi" type="password" value="cw-api-key-••••••••••••"/>
+                        </div>
+                        <div class="fg mb20">
+                            <label>Scoring Timeout (ms)</label>
+                            <input class="fi" type="number" value="2000"/>
+                        </div>
+                        <button class="btn btn-ghost" onclick="toast('API connection tested successfully','success')">Test Connection</button>
+                    </div>
+                </div>
+
+                <!-- User Profile -->
+                <div class="card">
+                    <div class="card-head"><div class="card-title">User Profile</div></div>
+                    <div class="card-body">
+                        <div class="fg mb14">
+                            <label>Full Name</label>
+                            <input class="fi" type="text" value="Sarah Ahmed"/>
+                        </div>
+                        <div class="fg mb14">
+                            <label>Email</label>
+                            <input class="fi" type="email" value="s.ahmed@insure.com"/>
+                        </div>
+                        <div class="fg mb14">
+                            <label>Role</label>
+                            <select class="fs">
+                                <option>Senior Investigator</option>
+                                <option>Agent</option>
+                                <option>Admin</option>
+                            </select>
+                        </div>
+                        <div class="fg mb20">
+                            <label>New Password</label>
+                            <input class="fi" type="password" placeholder="Leave blank to keep current"/>
+                        </div>
+                        <button class="btn btn-amber" onclick="toast('Profile updated successfully','success')">Update Profile</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ══════════════════════════════════════════════════════════
+       DATA STORE
+       ══════════════════════════════════════════════════════════ */
+    const ALL_CLAIMS = [
+        {id:'CLM-001',name:'James Okafor',type:'Auto',amount:48200,risk:'H',score:0.91,status:'investigating',date:'Jun 15',flags:['multiple_claims_30d','no_police_report','high_amount_ratio'],c30:3,c90:7,avg:24100},
+        {id:'CLM-002',name:'Priya Sharma',type:'Health',amount:12400,risk:'M',score:0.58,status:'processing',date:'Jun 15',flags:['potential_duplicate'],c30:1,c90:2,avg:8200},
+        {id:'CLM-003',name:'Liu Wei',type:'Property',amount:3800,risk:'L',score:0.12,status:'approved',date:'Jun 14',flags:[],c30:0,c90:1,avg:3800},
+        {id:'CLM-004',name:'Elena Torres',type:'Travel',amount:9100,risk:'H',score:0.82,status:'investigating',date:'Jun 14',flags:['rapid_location_change','potential_duplicate'],c30:2,c90:5,avg:7300},
+        {id:'CLM-005',name:'Ahmad Khalil',type:'Health',amount:1250,risk:'L',score:0.08,status:'approved',date:'Jun 14',flags:[],c30:0,c90:0,avg:1250},
+        {id:'CLM-006',name:'Marcus Diallo',type:'Auto',amount:22700,risk:'M',score:0.46,status:'processing',date:'Jun 13',flags:['claim_exceeds_90pct_coverage'],c30:1,c90:3,avg:15000},
+        {id:'CLM-007',name:'Yuki Tanaka',type:'Life',amount:95000,risk:'H',score:0.88,status:'investigating',date:'Jun 13',flags:['multiple_claims_30d','no_supporting_docs','incident_late_night'],c30:2,c90:4,avg:55000},
+        {id:'CLM-008',name:'Sofia Mendez',type:'Property',amount:8400,risk:'L',score:0.19,status:'approved',date:'Jun 12',flags:[],c30:0,c90:1,avg:6000},
+        {id:'CLM-009',name:'Amir Hassan',type:'Auto',amount:31000,risk:'H',score:0.79,status:'investigating',date:'Jun 12',flags:['multiple_claims_30d','rapid_location_change'],c30:3,c90:6,avg:22000},
+        {id:'CLM-010',name:'Rachel Park',type:'Health',amount:5600,risk:'M',score:0.52,status:'processing',date:'Jun 11',flags:['potential_duplicate'],c30:1,c90:2,avg:4500},
+        {id:'CLM-011',name:'David Osei',type:'Travel',amount:2900,risk:'L',score:0.09,status:'approved',date:'Jun 11',flags:[],c30:0,c90:0,avg:2900},
+        {id:'CLM-012',name:'Fatima Al-Rashid',type:'Auto',amount:17500,risk:'M',score:0.44,status:'processing',date:'Jun 10',flags:['claim_exceeds_90pct_coverage'],c30:1,c90:2,avg:12000},
+        {id:'CLM-013',name:'Carlos Vega',type:'Health',amount:42000,risk:'H',score:0.93,status:'investigating',date:'Jun 10',flags:['multiple_claims_30d','no_police_report','high_amount_ratio','incident_late_night'],c30:4,c90:9,avg:28000},
+        {id:'CLM-014',name:'Ingrid Lindqvist',type:'Property',amount:11200,risk:'L',score:0.15,status:'approved',date:'Jun 9',flags:[],c30:0,c90:1,avg:9000},
+        {id:'CLM-015',name:'Omar Farouq',type:'Life',amount:78000,risk:'H',score:0.87,status:'investigating',date:'Jun 9',flags:['multiple_claims_30d','potential_duplicate'],c30:2,c90:5,avg:45000},
+        {id:'CLM-016',name:'Nina Patel',type:'Auto',amount:6200,risk:'L',score:0.11,status:'approved',date:'Jun 8',flags:[],c30:0,c90:0,avg:6200},
+        {id:'CLM-017',name:'Jerome Banks',type:'Health',amount:18900,risk:'M',score:0.61,status:'processing',date:'Jun 8',flags:['claim_exceeds_90pct_coverage','potential_duplicate'],c30:1,c90:3,avg:14000},
+        {id:'CLM-018',name:'Mei Chen',type:'Property',amount:4100,risk:'L',score:0.07,status:'approved',date:'Jun 7',flags:[],c30:0,c90:0,avg:4100},
+        {id:'CLM-019',name:'Rodrigo Santos',type:'Travel',amount:13600,risk:'H',score:0.76,status:'investigating',date:'Jun 7',flags:['rapid_location_change','multiple_claims_30d'],c30:2,c90:4,avg:9500},
+        {id:'CLM-020',name:'Alicia Drummond',type:'Auto',amount:24800,risk:'M',score:0.49,status:'processing',date:'Jun 6',flags:['claim_exceeds_90pct_coverage'],c30:1,c90:2,avg:18000},
+    ];
+
+    const REVIEW_QUEUE = [
+        {id:'CLM-002',name:'Priya Sharma',type:'Health',amount:12400,risk:'M',assigned:'Tom Walsh',due:'Jun 17'},
+        {id:'CLM-006',name:'Marcus Diallo',type:'Auto',amount:22700,risk:'M',assigned:'Sarah Ahmed',due:'Jun 17'},
+        {id:'CLM-010',name:'Rachel Park',type:'Health',amount:5600,risk:'M',assigned:'Tom Walsh',due:'Jun 18'},
+        {id:'CLM-012',name:'Fatima Al-Rashid',type:'Auto',amount:17500,risk:'M',assigned:'Jane Kim',due:'Jun 18'},
+        {id:'CLM-017',name:'Jerome Banks',type:'Health',amount:18900,risk:'M',assigned:'Sarah Ahmed',due:'Jun 19'},
+        {id:'CLM-020',name:'Alicia Drummond',type:'Auto',amount:24800,risk:'M',assigned:'Tom Walsh',due:'Jun 19'},
+    ];
+
+    const PATTERNS = [
+        {label:'Multiple claims within 30 days',pct:87,color:'var(--red)'},
+        {label:'High amount-to-coverage ratio',pct:72,color:'var(--red)'},
+        {label:'No supporting documents',pct:64,color:'var(--amber)'},
+        {label:'Potential duplicate claim',pct:58,color:'var(--amber)'},
+        {label:'Rapid location change',pct:41,color:'var(--cyan)'},
+        {label:'Late-night incident report',pct:34,color:'var(--cyan)'},
+        {label:'Exceeds 90% coverage limit',pct:28,color:'var(--text3)'},
+    ];
+    const FEATURES = [
+        {label:'Claim amount-to-coverage ratio',val:0.19,pct:95},
+        {label:'Claims count last 30 days',val:0.16,pct:80},
+        {label:'Duplicate similarity score',val:0.13,pct:65},
+        {label:'Claim amount (absolute)',val:0.11,pct:55},
+        {label:'Document completeness',val:0.08,pct:40},
+        {label:'Incident hour of day',val:0.06,pct:30},
+        {label:'Days since policy start',val:0.05,pct:25},
+    ];
+
+    /* ══════════════════════════════════════════════════════════
+       STATE
+       ══════════════════════════════════════════════════════════ */
+    let claimsPage = 1;
+    const PAGE_SIZE = 10;
+    let filteredClaims = [...ALL_CLAIMS];
+    let flaggedFilter = 'all';
+    let currentModalClaim = null;
+
+    /* ══════════════════════════════════════════════════════════
+       NAVIGATION
+       ══════════════════════════════════════════════════════════ */
+    const PAGE_TITLES = {
+        dashboard:'Dashboard', analytics:'Analytics & Reporting',
+        submit:'Submit New Claim', claims:'All Claims',
+        flagged:'Flagged Claims', review:'Review Queue',
+        model:'Model Status', settings:'Settings'
+    };
+
+    function nav(el, id) {
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        const pg = document.getElementById('pg-' + id);
+        if (pg) pg.classList.add('active');
+        document.getElementById('topbar-title').textContent = PAGE_TITLES[id] || id;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+       ══════════════════════════════════════════════════════════ */
+    function toast(msg, type='success') {
+        const icons = {success:'✅', danger:'🚨', warn:'⚠️', info:'ℹ️'};
+        const z = document.getElementById('toast-zone');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<span class="ti">${icons[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span><span class="toast-cls" onclick="dismissToast(this.parentElement)">✕</span>`;
+        z.appendChild(t);
+        setTimeout(() => dismissToast(t), 3500);
+    }
+    function dismissToast(el) {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 320);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MODALS
+       ══════════════════════════════════════════════════════════ */
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+    }
+    document.querySelectorAll('.overlay').forEach(o => {
+        o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+    });
+
+    function openInvestigate(claimId) {
+        const c = ALL_CLAIMS.find(x => x.id === claimId);
+        if (!c) return;
+        currentModalClaim = c;
+
+        document.getElementById('modal-cid').textContent = c.id + ' · ' + c.name;
+
+        // Gauge
+        const prob = c.score;
+        const arc = document.getElementById('gauge-arc');
+        const maxLen = 157;
+        const offset = maxLen - (prob * maxLen);
+        arc.style.strokeDashoffset = offset;
+        arc.style.stroke = prob >= 0.7 ? 'var(--red)' : prob >= 0.4 ? 'var(--amber)' : 'var(--green)';
+        document.getElementById('gauge-val').textContent = prob.toFixed(2);
+
+        const badge = document.getElementById('modal-risk-badge');
+        badge.textContent = c.risk === 'H' ? 'HIGH' : c.risk === 'M' ? 'MEDIUM' : 'LOW';
+        badge.className = 'risk ' + c.risk;
+
+        // Factors
+        const factorData = [
+            {lbl:'Claim frequency (30d)', pct: Math.min(100, c.c30 * 33), color: c.c30 >= 2 ? 'var(--red)' : 'var(--green)'},
+            {lbl:'Amount-to-coverage ratio', pct: Math.min(100, (c.amount/100000)*100), color: prob >= 0.7 ? 'var(--red)' : 'var(--amber)'},
+            {lbl:'Duplicate similarity', pct: c.flags.includes('potential_duplicate') ? 75 : 10, color:'var(--amber)'},
+            {lbl:'Document completeness', pct: c.flags.includes('no_supporting_docs') ? 5 : 85, color:'var(--cyan)'},
+        ];
+        document.getElementById('modal-factors').innerHTML = factorData.map(f => `
+    <div class="factor">
+      <div class="factor-lbl">${f.lbl}</div>
+      <div class="factor-track"><div class="factor-fill" style="width:${f.pct}%;background:${f.color}"></div></div>
+      <div class="factor-val" style="color:${f.color}">${(f.pct/100*0.2).toFixed(2)}</div>
+    </div>`).join('');
+
+        // Flags
+        document.getElementById('modal-flags').innerHTML = c.flags.length
+            ? c.flags.map(f => `<span class="flag-tag">${f}</span>`).join('')
+            : '<span class="dim">No rule flags triggered</span>';
+
+        // History
+        document.getElementById('mi-c30').textContent = c.c30;
+        document.getElementById('mi-c90').textContent = c.c90;
+        document.getElementById('mi-avg').textContent = '$' + c.avg.toLocaleString();
+
+        document.getElementById('decisionSelect').value = '';
+        document.getElementById('investigateModal').classList.add('open');
+    }
+
+    function submitDecision() {
+        const dec = document.getElementById('decisionSelect').value;
+        if (!dec) { toast('Please select a decision','warn'); return; }
+        closeModal('investigateModal');
+        const msgs = {
+            confirmed_fraud: ['Claim rejected — confirmed fraud logged to record','danger'],
+            cleared: ['Claim cleared and approved for payment','success'],
+            escalated: ['Claim escalated to senior investigation team','warn'],
+        };
+        const [msg, type] = msgs[dec];
+        toast(msg, type);
+        if (currentModalClaim) {
+            currentModalClaim.status = dec === 'confirmed_fraud' ? 'rejected' : dec === 'cleared' ? 'approved' : 'investigating';
+            renderDashTable();
+            renderAllClaims();
+            renderFlagged();
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SEARCH
+       ══════════════════════════════════════════════════════════ */
+    function openSearch() {
+        document.getElementById('searchOverlay').classList.add('open');
+        setTimeout(() => document.getElementById('searchInput').focus(), 50);
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResults').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:0.7rem">Type to search claims…</div>';
+    }
+    function closeSearch() {
+        document.getElementById('searchOverlay').classList.remove('open');
+    }
+    function runSearch(q) {
+        const el = document.getElementById('searchResults');
+        if (!q.trim()) {
+            el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:0.7rem">Type to search claims…</div>';
+            return;
+        }
+        const results = ALL_CLAIMS.filter(c =>
+            c.id.toLowerCase().includes(q.toLowerCase()) ||
+            c.name.toLowerCase().includes(q.toLowerCase()) ||
+            c.type.toLowerCase().includes(q.toLowerCase())
+        );
+        if (!results.length) {
+            el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:0.7rem">No claims found</div>';
+            return;
+        }
+        el.innerHTML = results.slice(0,8).map(c => `
+    <div class="sr-item" onclick="openFromSearch('${c.id}')">
+      <span class="risk ${c.risk}">${c.risk === 'H' ? 'HIGH' : c.risk === 'M' ? 'MED' : 'LOW'}</span>
+      <div>
+        <div class="sr-id">${c.id}</div>
+        <div class="sr-name">${c.name} · ${c.type}</div>
+      </div>
+      <div class="sr-amount">$${c.amount.toLocaleString()}</div>
+    </div>`).join('');
+    }
+    function openFromSearch(id) {
+        closeSearch();
+        openInvestigate(id);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       NOTIFICATIONS
+       ══════════════════════════════════════════════════════════ */
+    function showNotifs() {
+        toast('3 new high-risk claims flagged in the last hour','danger');
+        setTimeout(() => toast('Model accuracy: 94.2% — Healthy','success'), 600);
+        setTimeout(() => toast('Duplicate detected: CLM-004 matches CLM-019','warn'), 1200);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       DASHBOARD TABLE
+       ══════════════════════════════════════════════════════════ */
+    function scoreColor(r) {
+        return r === 'H' ? 'var(--red)' : r === 'M' ? 'var(--amber)' : 'var(--green)';
+    }
+    function statusChip(s) {
+        return `<span class="chip ${s}">${s}</span>`;
+    }
+
+    function renderDashTable(filter='all') {
+        const data = filter === 'all' ? ALL_CLAIMS.slice(0,8) : ALL_CLAIMS.filter(c => c.risk === filter).slice(0,8);
+        document.getElementById('dashTbody').innerHTML = data.map(c => `
+    <tr data-risk="${c.risk}">
+      <td class="mono">${c.id}</td>
+      <td>${c.type}</td>
+      <td>$${c.amount.toLocaleString()}</td>
+      <td><span class="risk ${c.risk}">${c.risk==='H'?'HIGH':c.risk==='M'?'MEDIUM':'LOW'}</span></td>
+      <td>
+        <div class="score-cell">
+          <div class="score-track"><div class="score-fill" style="width:${c.score*100}%;background:${scoreColor(c.risk)}"></div></div>
+          <span class="score-num" style="color:${scoreColor(c.risk)}">${c.score.toFixed(2)}</span>
+        </div>
+      </td>
+      <td>${statusChip(c.status)}</td>
+      <td class="dim">${c.date}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openInvestigate('${c.id}')">${c.risk==='L'?'View':'Review'}</button></td>
+    </tr>`).join('');
+    }
+
+    function dashFilter(el, f) {
+        document.querySelectorAll('#pg-dashboard .fc').forEach(x => x.classList.remove('on'));
+        el.classList.add('on');
+        renderDashTable(f);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       ALL CLAIMS
+       ══════════════════════════════════════════════════════════ */
+    function renderAllClaims() {
+        const start = (claimsPage - 1) * PAGE_SIZE;
+        const slice = filteredClaims.slice(start, start + PAGE_SIZE);
+        const total = filteredClaims.length;
+        const pages = Math.ceil(total / PAGE_SIZE);
+
+        document.getElementById('allClaimsTbody').innerHTML = slice.map(c => `
+    <tr>
+      <td class="mono">${c.id}</td>
+      <td>${c.name}</td>
+      <td>${c.type}</td>
+      <td>$${c.amount.toLocaleString()}</td>
+      <td><span class="risk ${c.risk}">${c.risk==='H'?'HIGH':c.risk==='M'?'MED':'LOW'}</span></td>
+      <td>
+        <div class="score-cell">
+          <div class="score-track"><div class="score-fill" style="width:${c.score*100}%;background:${scoreColor(c.risk)}"></div></div>
+          <span class="score-num" style="color:${scoreColor(c.risk)}">${c.score.toFixed(2)}</span>
+        </div>
+      </td>
+      <td>${statusChip(c.status)}</td>
+      <td class="dim">${c.date}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openInvestigate('${c.id}')">Review</button></td>
+    </tr>`).join('');
+
+        document.getElementById('paginationInfo').textContent = `Showing ${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total} claims`;
+        document.getElementById('pageIndicator').textContent = `Page ${claimsPage}/${pages}`;
+        document.getElementById('prevBtn').disabled = claimsPage === 1;
+        document.getElementById('nextBtn').disabled = claimsPage >= pages;
+        document.getElementById('claims-count').textContent = `${total} claims · Showing ${PAGE_SIZE}/page`;
+    }
+
+    function filterClaims(el, type) {
+        document.querySelectorAll('#pg-claims .fc').forEach(x => x.classList.remove('on'));
+        el.classList.add('on');
+        claimsPage = 1;
+        filteredClaims = type === 'all' ? [...ALL_CLAIMS] : ALL_CLAIMS.filter(c => c.type === type);
+        renderAllClaims();
+    }
+
+    function sortClaims(by) {
+        if (by === 'amount') filteredClaims.sort((a,b) => b.amount - a.amount);
+        else if (by === 'score') filteredClaims.sort((a,b) => b.score - a.score);
+        else filteredClaims.sort((a,b) => a.date < b.date ? 1 : -1);
+        claimsPage = 1;
+        renderAllClaims();
+    }
+
+    function changePage(dir) {
+        const pages = Math.ceil(filteredClaims.length / PAGE_SIZE);
+        claimsPage = Math.max(1, Math.min(pages, claimsPage + dir));
+        renderAllClaims();
+    }
+
+    function exportCSV() {
+        const header = 'Claim ID,Claimant,Type,Amount,Risk,Score,Status,Date\n';
+        const rows = filteredClaims.map(c =>
+            `${c.id},${c.name},${c.type},${c.amount},${c.risk},${c.score},${c.status},${c.date}`
+        ).join('\n');
+        const blob = new Blob([header + rows], {type:'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'claimwatch_export.csv'; a.click();
+        URL.revokeObjectURL(url);
+        toast('CSV exported successfully', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       FLAGGED CLAIMS
+       ══════════════════════════════════════════════════════════ */
+    function renderFlagged(filter='all') {
+        const flagged = ALL_CLAIMS.filter(c => {
+            if (filter === 'H') return c.risk === 'H';
+            if (filter === 'M') return c.risk === 'M';
+            return c.risk === 'H' || c.risk === 'M';
+        }).filter(c => c.flags.length > 0);
+
+        document.getElementById('flagged-count').textContent =
+            `${flagged.length} claims requiring investigation`;
+
+        document.getElementById('flaggedList').innerHTML = flagged.map(c => `
+    <div class="risk-card ${c.risk==='M'?'med':''}">
+      <div class="risk-card-head">
+        <div class="risk-card-info">
+          <div class="risk-card-id">
+            <span class="mono">${c.id}</span>
+            <span class="risk ${c.risk}" style="font-size:0.6rem">${c.risk==='H'?'HIGH':'MEDIUM'} · ${c.score.toFixed(2)}</span>
+          </div>
+          <div class="risk-card-name">${c.type} claim — ${c.name} · $${c.amount.toLocaleString()}</div>
+          <div class="risk-card-meta">Submitted ${c.date} · ${c.c30} claims in last 30d</div>
+        </div>
+        <div class="risk-card-flags">
+          ${c.flags.map(f => `<span class="flag-tag ${c.risk==='M'?'warn':''}">${f}</span>`).join('')}
+        </div>
+        <div class="risk-card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toast('Claim CLM-${c.id} escalated to senior team','warn')">Escalate</button>
+          <button class="btn ${c.risk==='H'?'btn-danger':'btn-ghost'} btn-sm" onclick="openInvestigate('${c.id}')">Investigate →</button>
+        </div>
+      </div>
+    </div>`).join('');
+    }
+
+    function filterFlagged(el, f) {
+        document.querySelectorAll('#pg-flagged .fc').forEach(x => x.classList.remove('on'));
+        el.classList.add('on');
+        flaggedFilter = f;
+        renderFlagged(f);
+    }
+
+    function bulkEscalate() {
+        toast('All selected high-risk claims escalated to senior team', 'warn');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       REVIEW QUEUE
+       ══════════════════════════════════════════════════════════ */
+    function renderReviewQueue() {
+        document.getElementById('reviewTbody').innerHTML = REVIEW_QUEUE.map(c => `
+    <tr>
+      <td class="mono">${c.id}</td>
+      <td>${c.name}</td>
+      <td>${c.type}</td>
+      <td>$${c.amount.toLocaleString()}</td>
+      <td><span class="risk M">MEDIUM</span></td>
+      <td style="color:var(--cyan)">${c.assigned}</td>
+      <td class="dim">${c.due}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openInvestigate('${c.id}')">Review</button></td>
+    </tr>`).join('');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       ANALYTICS BARS
+       ══════════════════════════════════════════════════════════ */
+    function renderPatternBars() {
+        document.getElementById('patternBars').innerHTML = PATTERNS.map(p => `
+    <div class="bar-row">
+      <div class="bar-lbl">${p.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+      <div class="bar-pct">${p.pct}%</div>
+    </div>`).join('');
+    }
+    function renderFeatureBars() {
+        document.getElementById('featureBars').innerHTML = FEATURES.map(f => `
+    <div class="bar-row">
+      <div class="bar-lbl">${f.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${f.pct}%;background:var(--amber)"></div></div>
+      <div class="bar-pct">${f.val.toFixed(2)}</div>
+    </div>`).join('');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SUBMIT CLAIM
+       ══════════════════════════════════════════════════════════ */
+    function handleUploadClick() {
+        toast('File upload dialog opened — Select PDF/JPG/PNG files', 'info');
+    }
+
+    function doSubmitClaim() {
+        const policy = document.getElementById('f-policy').value.trim();
+        const type   = document.getElementById('f-type').value;
+        const amount = document.getElementById('f-amount').value;
+        const date   = document.getElementById('f-date').value;
+        const loc    = document.getElementById('f-loc').value.trim();
+        const name   = document.getElementById('f-name').value.trim();
+
+        if (!policy || !type || !amount || !date || !loc || !name) {
+            toast('Please fill all required fields (*)', 'warn');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            const amt = parseFloat(amount);
+            let score, risk;
+            if (amt > 40000) { score = (Math.random() * 0.2 + 0.70).toFixed(2); risk = 'H'; }
+            else if (amt > 10000) { score = (Math.random() * 0.3 + 0.40).toFixed(2); risk = 'M'; }
+            else { score = (Math.random() * 0.35).toFixed(2); risk = 'L'; }
+
+            btn.innerHTML = '⚡ Submit & Analyze Claim';
+            btn.disabled = false;
+
+            const colorMap = {H:'var(--red)',M:'var(--amber)',L:'var(--green)'};
+            const labelMap = {H:'HIGH RISK',M:'MEDIUM RISK',L:'LOW RISK'};
+            const bgMap = {H:'var(--red-d)',M:'var(--amber-d)',L:'var(--green-d)'};
+            const borderMap = {H:'var(--red)',M:'var(--amber)',L:'var(--green)'};
+
+            const resultDiv = document.getElementById('scoreResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+      <div class="card" style="border-color:${borderMap[risk]};background:${bgMap[risk]}">
+        <div class="card-body center">
+          <div style="font-size:2rem;margin-bottom:6px">${risk==='L'?'✅':risk==='M'?'⚠️':'🚨'}</div>
+          <div class="section-heading mb8">Score: <span style="color:${colorMap[risk]}">${score}</span></div>
+          <span class="risk ${risk}">${labelMap[risk]}</span>
+          <div class="dim mt12">${risk==='L'?'Claim auto-approved for processing.':risk==='M'?'Claim sent to review queue for verification.':'Claim flagged for immediate investigation.'}</div>
+          <div class="mono" style="font-size:0.65rem;margin-top:8px">CLM-${Date.now().toString().slice(-6)}</div>
+        </div>
+      </div>`;
+
+            toast(`Claim analyzed — ${labelMap[risk]} (${score})`, risk==='L'?'success':risk==='M'?'warn':'danger');
+
+            // Add to data
+            ALL_CLAIMS.unshift({
+                id: 'CLM-NEW-' + Date.now().toString().slice(-4),
+                name, type, amount: parseFloat(amount), risk, score: parseFloat(score),
+                status: risk==='L'?'approved':risk==='M'?'processing':'investigating',
+                date: 'Today', flags: [], c30: 0, c90: 0, avg: parseFloat(amount)
+            });
+            filteredClaims = [...ALL_CLAIMS];
+            renderAllClaims();
+            renderFlagged();
+            document.getElementById('kpi-total').textContent = parseInt(document.getElementById('kpi-total').textContent) + 1;
+        }, 1400);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MODEL RETRAIN
+       ══════════════════════════════════════════════════════════ */
+    function triggerRetrain() {
+        const btn = document.getElementById('retrainBtn');
+        btn.innerHTML = '<span class="spinner"></span> Training…';
+        btn.disabled = true;
+        toast('Model retraining started — estimating 12 minutes', 'info');
+        let p = 0;
+        const iv = setInterval(() => {
+            p += Math.random() * 15;
+            if (p >= 100) {
+                clearInterval(iv);
+                btn.innerHTML = '⟳ Trigger Now';
+                btn.disabled = false;
+                toast('Model v1.0.1 trained — ROC-AUC: 0.951 (+0.004)', 'success');
+            }
+        }, 800);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SETTINGS
+       ══════════════════════════════════════════════════════════ */
+    function saveSettings() {
+        const high = parseFloat(document.getElementById('s-high').value);
+        const med  = parseFloat(document.getElementById('s-med').value);
+        if (isNaN(high) || isNaN(med) || high <= med) {
+            toast('High threshold must be greater than medium threshold', 'warn');
+            return;
+        }
+        toast('Threshold settings saved and applied to model', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       LIVE UPDATE TICKER
+       ══════════════════════════════════════════════════════════ */
+    function updateTimestamp() {
+        const secs = Math.floor(Date.now() / 1000) % 60;
+        document.getElementById('lastUpdate').textContent = secs === 0 ? 'just now' : `${secs}s ago`;
+    }
+    setInterval(updateTimestamp, 5000);
+
+    // Occasional live claim alerts
+    setInterval(() => {
+        const c = ALL_CLAIMS[Math.floor(Math.random() * 5)];
+        if (c.risk === 'H' && Math.random() > 0.6) {
+            toast(`New high-risk claim ${c.id} — Score: ${c.score.toFixed(2)}`, 'danger');
+            const kpi = document.getElementById('kpi-high');
+            kpi.textContent = parseInt(kpi.textContent) + 1;
+        }
+    }, 18000);
+
+    /* ══════════════════════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDashTable();
+        renderAllClaims();
+        renderFlagged();
+        renderReviewQueue();
+        renderPatternBars();
+        renderFeatureBars();
+
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('f-date').value = today;
+    });
+
+    // ESC key for search / modal
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            closeSearch();
+            document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearch();
+        }
+    });
+</script>
+</body>
+</html>
