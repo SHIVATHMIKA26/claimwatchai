@@ -9,5 +9,4 @@ public class ClaimWatchAiApplication {
     public static void main(String[] args) {
         SpringApplication.run(ClaimWatchAiApplication.class, args);
     }
-
 }

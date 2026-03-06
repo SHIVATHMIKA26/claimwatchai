@@ -1,0 +1,14 @@
+POST http://localhost:8081/api/check-fraud
+Content-Type: application/json
+
+{
+  "monthsAsCustomer": 1,
+  "age": 8,
+  "policyDeductable": 50,
+  "policyAnnualPremium": 20,
+  "umbrellaLimit": 9,
+  "incidentSeverity": 6,
+  "numberOfVehiclesInvolved": 9,
+  "bodilyInjuries": 4,
+  "totalClaimAmount": 5089700
+}

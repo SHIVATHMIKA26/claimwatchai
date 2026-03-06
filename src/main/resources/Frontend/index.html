@@ -1,107 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
-    <title>ClaimWatchAI - Insurance Fraud Detection</title>
+    <meta charset="UTF-8">
+    <title>ClaimWatchAI</title>
 
     <style>
 
         body{
-            font-family:Arial;
-            background:#eef2f7;
-            padding:40px;
+            margin:0;
+            font-family: "Segoe UI", Arial;
+            background: linear-gradient(135deg,#e0f2ff,#f7e9ff);
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
         }
 
         .container{
-            width:520px;
-            margin:auto;
+
+            width:600px;
             background:white;
-            padding:30px;
-            border-radius:10px;
-            box-shadow:0 8px 25px rgba(0,0,0,0.1);
+            padding:35px;
+            border-radius:16px;
+            box-shadow:0 10px 35px rgba(0,0,0,0.15);
         }
 
-        h2{
+        .header{
             text-align:center;
-            margin-bottom:20px;
+        }
+
+        .header img{
+            width:70px;
+            margin-bottom:10px;
+        }
+
+        .header h2{
+            margin:0;
+            color:#3a3a3a;
+        }
+
+        .header p{
+            color:#777;
+            font-size:14px;
+        }
+
+        .form-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+            margin-top:20px;
         }
 
         input{
-            width:100%;
             padding:10px;
-            margin:8px 0;
+            border-radius:8px;
             border:1px solid #ddd;
-            border-radius:6px;
+            font-size:14px;
+        }
+
+        input:focus{
+            outline:none;
+            border:1px solid #6a7cff;
         }
 
         button{
+            margin-top:18px;
             width:100%;
-            padding:12px;
-            margin-top:10px;
-            background:#0077ff;
-            color:white;
+            padding:14px;
             border:none;
-            border-radius:6px;
+            border-radius:10px;
             font-size:16px;
+            font-weight:600;
+            background:linear-gradient(90deg,#6a7cff,#b86bff);
+            color:white;
             cursor:pointer;
+            transition:0.3s;
         }
 
         button:hover{
-            background:#005edb;
+            transform:scale(1.04);
         }
 
         .result{
-            margin-top:20px;
-            padding:15px;
-            border-radius:6px;
-            background:#f1f1f1;
+            margin-top:25px;
+            padding:18px;
+            border-radius:10px;
+            background:#f6f6f6;
+            text-align:center;
+        }
+
+        .badge{
+            padding:8px 16px;
+            border-radius:20px;
+            font-weight:bold;
+        }
+
+        .legit{
+            background:#d4ffe6;
+            color:#1a8b52;
+        }
+
+        .fraud{
+            background:#ffe0e0;
+            color:#d12d2d;
+        }
+
+        footer{
+            text-align:center;
+            font-size:12px;
+            margin-top:15px;
+            color:#888;
         }
 
     </style>
 
 </head>
 
+
 <body>
 
 <div class="container">
 
-    <h2>ClaimWatchAI Fraud Detection</h2>
+    <div class="header">
 
-    <input id="months" placeholder="Months As Customer">
-    <input id="age" placeholder="Age">
-    <input id="deductable" placeholder="Policy Deductable">
-    <input id="premium" placeholder="Policy Annual Premium">
-    <input id="umbrella" placeholder="Umbrella Limit">
-    <input id="severity" placeholder="Incident Severity">
-    <input id="vehicles" placeholder="Number Of Vehicles Involved">
-    <input id="injuries" placeholder="Bodily Injuries">
-    <input id="amount" placeholder="Total Claim Amount">
+        <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
 
-    <button onclick="submitClaim()">Analyze Claim</button>
+        <h2>ClaimWatchAI</h2>
 
-    <div class="result" id="result"></div>
+        <p>Smart Insurance Fraud Detection</p>
+
+    </div>
+
+
+    <div class="form-grid">
+
+        <input id="months" placeholder="Months as Customer">
+        <input id="age" placeholder="Age">
+
+        <input id="deductable" placeholder="Policy Deductable">
+        <input id="premium" placeholder="Annual Premium">
+
+        <input id="umbrella" placeholder="Umbrella Limit">
+        <input id="severity" placeholder="Incident Severity">
+
+        <input id="vehicles" placeholder="Vehicles Involved">
+        <input id="injuries" placeholder="Bodily Injuries">
+
+        <input id="amount" placeholder="Total Claim Amount">
+
+    </div>
+
+
+    <button onclick="checkFraud()">Analyze Claim</button>
+
+
+    <div class="result" id="result">
+
+        AI prediction will appear here
+
+    </div>
+
+
+    <footer>
+
+        ClaimWatchAI • Machine Learning Fraud Detection
+
+    </footer>
 
 </div>
 
+
 <script>
 
-    function submitClaim(){
+    function checkFraud(){
 
-        let data = {
+        let data={
 
-            months_as_customer:parseInt(document.getElementById("months").value),
+            monthsAsCustomer:parseInt(document.getElementById("months").value),
             age:parseInt(document.getElementById("age").value),
-            policy_deductable:parseInt(document.getElementById("deductable").value),
-            policy_annual_premium:parseFloat(document.getElementById("premium").value),
-            umbrella_limit:parseInt(document.getElementById("umbrella").value),
-            incident_severity:parseInt(document.getElementById("severity").value),
-            number_of_vehicles_involved:parseInt(document.getElementById("vehicles").value),
-            bodily_injuries:parseInt(document.getElementById("injuries").value),
-            total_claim_amount:parseFloat(document.getElementById("amount").value)
+            policyDeductable:parseInt(document.getElementById("deductable").value),
+            policyAnnualPremium:parseFloat(document.getElementById("premium").value),
+            umbrellaLimit:parseInt(document.getElementById("umbrella").value),
+            incidentSeverity:parseInt(document.getElementById("severity").value),
+            numberOfVehiclesInvolved:parseInt(document.getElementById("vehicles").value),
+            bodilyInjuries:parseInt(document.getElementById("injuries").value),
+            totalClaimAmount:parseFloat(document.getElementById("amount").value)
 
         };
 
-        fetch("http://localhost:8080/api/checkFraud",{
+
+        fetch("http://localhost:8081/api/check-fraud",{
 
             method:"POST",
 
@@ -113,22 +203,25 @@
 
         })
 
-            .then(response=>response.json())
+            .then(res=>res.json())
 
             .then(result=>{
 
-                document.getElementById("result").innerHTML =
-                    "<b>Prediction:</b> "+result.prediction;
+                let badgeClass = result.prediction === "FRAUD" ? "fraud" : "legit"
+
+                document.getElementById("result").innerHTML=
+
+                    "<h3>Prediction</h3>"+
+                    "<span class='badge "+badgeClass+"'>"+result.prediction+"</span>"+
+                    "<p style='margin-top:10px'>Fraud Probability: <b>"+result.fraudProbability+"</b></p>"
 
             })
 
             .catch(error=>{
 
-                console.log(error);
+                document.getElementById("result").innerHTML="⚠ Backend connection error"
 
-                document.getElementById("result").innerHTML="Error connecting to backend.";
-
-            });
+            })
 
     }
 

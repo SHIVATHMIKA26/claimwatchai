@@ -1,25 +1,22 @@
 package com.shivathmika.claimwatchai.controller;
 
-import com.shivathmika.claimwatchai.service.FraudDetectionService;
+import com.shivathmika.claimwatchai.model.Claim;
+import com.shivathmika.claimwatchai.repository.ClaimRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins="*")
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 public class ClaimController {
 
     @Autowired
-    FraudDetectionService fraudService;
+    private ClaimRepository claimRepository;
 
-    @GetMapping("/")
-    public String home(){
-        return "ClaimWatchAI Backend Running";
-    }
-
-    @PostMapping("/check-fraud")
-    public String checkFraud(@RequestBody String claimData) throws Exception {
-
-        return fraudService.checkFraud(claimData);
+    @GetMapping("/claims")
+    public List<Claim> getAllClaims() {
+        return claimRepository.findAll();
     }
 }
