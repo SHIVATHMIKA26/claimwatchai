@@ -4,10 +4,12 @@ import joblib
 
 app = Flask(__name__)
 
-# Load model
 metadata = joblib.load("claimwatch_model.pkl")
 model = metadata["model"]
-features = metadata["features"]
+
+@app.route("/")
+def home():
+    return "ClaimWatchAI ML API Running"
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -15,7 +17,6 @@ def predict():
         data = request.json
         print("Received data:", data)
 
-        # Convert to dataframe
         input_data = pd.DataFrame([{
             "months_as_customer": data["monthsAsCustomer"],
             "age": data["age"],
@@ -30,10 +31,7 @@ def predict():
 
         prob = model.predict_proba(input_data)[0][1]
 
-        if prob > 0.20:
-            result = "FRAUD"
-        else:
-            result = "LEGIT"
+        result = "FRAUD" if prob > 0.20 else "LEGIT"
 
         print("Fraud Probability:", prob)
         print("Prediction:", result)
@@ -46,7 +44,6 @@ def predict():
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(port=5001)
